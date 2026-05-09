@@ -3,6 +3,8 @@ const path = require('path');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+console.log('🚀 Server starting...');
+
 const client = require('../bot/index');
 
 app.use(express.json());
@@ -20,7 +22,7 @@ app.use((req, res, next) => {
     next();
 });
 
-// Logs لكل طلب
+// Logs
 app.use((req, res, next) => {
     console.log(`📡 ${req.method} ${req.path} - ${new Date().toLocaleTimeString()}`);
     next();
@@ -44,21 +46,22 @@ app.get('/api/commands', (req, res) => {
 
 app.post('/api/start', async (req, res) => {
     console.log('🚀 /api/start called');
+    console.log('📨 Request body:', req.body);
+    
     try {
         const { token } = req.body;
-        console.log('📨 Token received:', token ? 'YES' : 'NO');
         
         if (!token) {
             console.log('❌ Token empty');
             return res.status(400).json({ success: false, message: '❌ التوكن فارغ!' });
         }
         
-        console.log('⏳ Starting bot...');
+        console.log('⏳ Starting bot with token...');
         const result = await client.loginWithToken(token);
-        console.log('✅ Result:', result);
+        console.log('✅ Bot started:', result);
         res.json(result);
     } catch (error) {
-        console.error('❌ Error:', error.message);
+        console.error('❌ Error in /api/start:', error);
         res.status(500).json({ success: false, message: '❌ خطأ: ' + error.message });
     }
 });
@@ -67,10 +70,8 @@ app.post('/api/stop', async (req, res) => {
     console.log('⏹️ /api/stop called');
     try {
         const result = await client.logoutBot();
-        console.log('✅ Result:', result);
         res.json(result);
     } catch (error) {
-        console.error('❌ Error:', error.message);
         res.status(500).json({ success: false, message: '❌ خطأ: ' + error.message });
     }
 });
@@ -92,12 +93,10 @@ app.get('/api/music/queue', (req, res) => {
     res.json({ queue: [] });
 });
 
-// صفحة رئيسية
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, '..', 'public', 'index.html'));
 });
 
-// معالجة الأخطاء
 app.use((err, req, res, next) => {
     console.error('Express error:', err);
     res.status(500).json({ success: false, message: 'Server error' });
