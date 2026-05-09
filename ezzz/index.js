@@ -35,11 +35,11 @@ function startBot(token) {
         const channel = member.guild.channels.cache.get(config.welcomeChannelId);
         if (!channel) return;
 
-        const welcomeMsg = config.welcomeMessage
-            .replace('{user}', `<@${member.id}>`)
-            .replace('{username}', member.user.username)
-            .replace('{server}', member.guild.name)
-            .replace('{count}`, member.guild.memberCount);
+       const welcomeMsg = config.welcomeMessage
+    .replace('{user}', `<@${member.id}>`)
+    .replace('{username}', member.user.username)
+    .replace('{server}', member.guild.name)
+    .replace('{count}', member.guild.memberCount);  // ← هنا التعديل
 
         const embed = new EmbedBuilder()
             .setTitle('🎉 عضو جديد!')
