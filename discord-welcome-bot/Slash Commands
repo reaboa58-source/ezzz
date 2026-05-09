@@ -1,0 +1,68 @@
+// deploy-commands.js
+const { REST, Routes } = require('discord.js');
+require('dotenv').config();
+
+const commands = [
+    {
+        name: 'ترحيب',
+        description: 'إعدادات الترحيب',
+        options: [
+            {
+                name: 'تفعيل',
+                description: 'تفعيل الترحيب',
+                type: 1, // SUB_COMMAND
+            },
+            {
+                name: 'تعطيل',
+                description: 'تعطيل الترحيب',
+                type: 1,
+            },
+            {
+                name: 'القناة',
+                description: 'تحديد قناة الترحيب',
+                type: 1,
+                options: [{
+                    name: 'الروم',
+                    description: 'اختر الروم',
+                    type: 7, // CHANNEL
+                    required: true
+                }]
+            },
+            {
+                name: 'الرسالة',
+                description: 'تغيير رسالة الترحيب',
+                type: 1,
+                options: [{
+                    name: 'نص',
+                    description: 'النص',
+                    type: 3, // STRING
+                    required: true
+                }]
+            },
+            {
+                name: 'عرض',
+                description: 'عرض الإعدادات',
+                type: 1,
+            }
+        ]
+    },
+    {
+        name: 'ترحيب-تجربة',
+        description: 'اختبار رسالة الترحيب',
+    }
+];
+
+const rest = new REST({ version: '10' }).setToken(process.env.DISCORD_TOKEN);
+
+(async () => {
+    try {
+        console.log('جاري تسجيل الأوامر...');
+        await rest.put(
+            Routes.applicationCommands('CLIENT_ID_هنا'),
+            { body: commands }
+        );
+        console.log('✅ تم تسجيل الأوامر بنجاح!');
+    } catch (error) {
+        console.error(error);
+    }
+})();
