@@ -15,7 +15,6 @@
         }
         .container { max-width: 800px; margin: 0 auto; }
         
-        /* شاشة التوكن */
         .token-box {
             background: rgba(255,255,255,0.05);
             border: 1px solid rgba(255,255,255,0.1);
@@ -40,12 +39,17 @@
             border: none; border-radius: 10px; color: #000;
             font-size: 20px; font-weight: bold; cursor: pointer;
         }
-        .start-btn:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(0,255,136,0.3); }
+        .start-btn:hover { transform: translateY(-2px); }
         .start-btn:disabled { opacity: 0.5; cursor: not-allowed; }
         .error { color: #ff4444; margin-top: 15px; display: none; }
         .loading { color: #00ff88; margin-top: 15px; display: none; }
+        .info {
+            background: rgba(0,255,136,0.1);
+            border-right: 3px solid #00ff88;
+            padding: 15px; border-radius: 8px;
+            margin-top: 20px; color: #ccc; font-size: 14px;
+        }
         
-        /* لوحة التحكم */
         .dashboard { display: none; }
         h1 { text-align: center; margin-bottom: 30px; color: #00ff88; }
         .card {
@@ -119,7 +123,6 @@
 <body>
     <div class="container">
         
-        <!-- شاشة التوكن -->
         <div class="token-box" id="tokenBox">
             <h1>🤖 بوت الترحيب</h1>
             <p>اكتب توكن البوت واضغط ابدأ</p>
@@ -130,13 +133,12 @@
             <div class="error" id="errorBox"></div>
             <div class="loading" id="loadingBox">⏳ جاري التشغيل...</div>
             
-            <div class="variables" style="margin-top: 20px;">
+            <div class="info">
                 <strong>📍 من وين أجيب التوكن؟</strong><br>
                 Discord Developer Portal → Bot → Reset Token
             </div>
         </div>
 
-        <!-- لوحة التحكم -->
         <div class="dashboard" id="dashboard">
             <h1>⚙️ لوحة التحكم</h1>
             
