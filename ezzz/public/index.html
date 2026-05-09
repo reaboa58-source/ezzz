@@ -1,1 +1,383 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🤖 بوت الترحيب</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header>
+            <div class="logo">
+                <div class="logo-icon">
+                    <i class="fas fa-robot"></i>
+                </div>
+                <h1>بوت الترحيب</h1>
+            </div>
+            <div class="status-badge offline" id="statusBadge">
+                <span class="dot offline" id="statusDot"></span>
+                <span id="statusText">متوقف</span>
+            </div>
+        </header>
 
+        <!-- Control Panel -->
+        <section class="panel">
+            <h2 class="panel-title">
+                <i class="fas fa-cog"></i>
+                لوحة التحكم
+            </h2>
+            
+            <div class="btn-group">
+                <button id="startBtn" class="btn btn-primary" onclick="startBot()">
+                    <i class="fas fa-play"></i>
+                    تشغيل البوت
+                </button>
+                <button id="stopBtn" class="btn btn-danger" onclick="stopBot()" disabled>
+                    <i class="fas fa-stop"></i>
+                    إيقاف البوت
+                </button>
+                <button class="btn btn-secondary" onclick="refreshStatus()">
+                    <i class="fas fa-sync"></i>
+                    تحديث
+                </button>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">توكن البوت</label>
+                <div class="input-group">
+                    <input type="password" id="botToken" class="form-control" placeholder="اكتب توكن البوت هنا...">
+                    <button onclick="saveToken()" class="btn btn-secondary">
+                        <i class="fas fa-save"></i>
+                        حفظ
+                    </button>
+                </div>
+                <div id="saveStatus" class="mt-2"></div>
+            </div>
+        </section>
+
+        <!-- Welcome Settings -->
+        <section class="panel" id="welcomePanel" style="display: none;">
+            <h2 class="panel-title">
+                <i class="fas fa-hand-sparkles"></i>
+                إعدادات الترحيب
+            </h2>
+
+            <div class="form-group">
+                <label class="form-label">تفعيل/تعطيل الترحيب</label>
+                <div class="toggle-switch">
+                    <div class="switch active" id="toggleSwitch" onclick="toggleWelcome()"></div>
+                    <span id="toggleText">مفعل</span>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">ايدي روم الترحيب</label>
+                <input type="text" id="channelId" class="form-control" placeholder="1234567890123456789">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">رسالة الترحيب</label>
+                <textarea id="welcomeMsg" class="form-control">👋 أهلاً وسهلاً {user} بسيرفرنا!</textarea>
+                <div class="variables">
+                    <strong>المتغيرات المتاحة:</strong>
+                    <code>{user}</code> <code>{username}</code> <code>{server}</code> <code>{count}</code>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">رابط صورة خلفية (اختياري)</label>
+                <input type="text" id="welcomeImage" class="form-control" placeholder="https://example.com/image.png">
+            </div>
+
+            <button class="btn btn-primary w-100" onclick="saveConfig()">
+                <i class="fas fa-save"></i>
+                حفظ الإعدادات
+            </button>
+        </section>
+
+        <!-- Preview -->
+        <section class="panel" id="previewPanel" style="display: none;">
+            <h2 class="panel-title">
+                <i class="fas fa-eye"></i>
+                معاينة الرسالة
+            </h2>
+            <div class="preview-box">
+                <div class="preview-header">
+                    <div class="avatar"></div>
+                    <div>
+                        <div style="color: #fff; font-weight: bold;">بوت الترحيب</div>
+                        <div style="color: #72767d; font-size: 12px;">الآن</div>
+                    </div>
+                </div>
+                <div class="preview-content" id="previewText">👋 أهلاً وسهلاً @User بسيرفرنا!</div>
+            </div>
+        </section>
+
+        <!-- Stats -->
+        <section class="panel">
+            <h2 class="panel-title">
+                <i class="fas fa-chart-bar"></i>
+                الإحصائيات
+            </h2>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <div class="stat-icon">
+                            <i class="fas fa-bolt"></i>
+                        </div>
+                    </div>
+                    <div class="stat-value" id="ping">-</div>
+                    <div class="stat-label">البنغ</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <div class="stat-icon">
+                            <i class="fas fa-server"></i>
+                        </div>
+                    </div>
+                    <div class="stat-value" id="guilds">-</div>
+                    <div class="stat-label">السيرفرات</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <div class="stat-icon">
+                            <i class="fas fa-users"></i>
+                        </div>
+                    </div>
+                    <div class="stat-value" id="users">-</div>
+                    <div class="stat-label">المستخدمين</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <div class="stat-icon">
+                            <i class="fas fa-terminal"></i>
+                        </div>
+                    </div>
+                    <div class="stat-value" id="commands">-</div>
+                    <div class="stat-label">الأوامر</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Commands -->
+        <section class="panel">
+            <h2 class="panel-title">
+                <i class="fas fa-code"></i>
+                الأوامر المتاحة
+            </h2>
+            <div class="commands-grid" id="commandsList">
+                <div class="empty-state">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    <h4>جاري التحميل...</h4>
+                </div>
+            </div>
+        </section>
+
+        <!-- Logs -->
+        <section class="panel">
+            <h2 class="panel-title">
+                <i class="fas fa-file-alt"></i>
+                السجلات
+            </h2>
+            <div class="log-container" id="logContainer">
+                <div class="log-entry">
+                    <span class="log-time">--:--:--</span>
+                    <span class="log-info">النظام جاهز. اكتب التوكن وشغل البوت.</span>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        let isBotRunning = false;
+
+        function loadToken() {
+            const saved = localStorage.getItem('discord_bot_token');
+            if (saved) document.getElementById('botToken').value = saved;
+        }
+
+        function saveToken() {
+            const token = document.getElementById('botToken').value.trim();
+            if (!token) {
+                showStatus('اكتب التوكن اول!', 'error');
+                return;
+            }
+            localStorage.setItem('discord_bot_token', token);
+            showStatus('تم حفظ التوكن', 'success');
+            log('تم حفظ التوكن', 'success');
+        }
+
+        function showStatus(msg, type) {
+            const el = document.getElementById('saveStatus');
+            el.innerHTML = `<span class="text-${type}">${msg}</span>`;
+            setTimeout(() => el.innerHTML = '', 3000);
+        }
+
+        async function startBot() {
+            const token = localStorage.getItem('discord_bot_token');
+            if (!token) {
+                log('اكتب التوكن اول!', 'error');
+                return;
+            }
+            log('جاري التشغيل...', 'warning');
+            try {
+                const res = await fetch('/api/start', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ token })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    log(data.message, 'success');
+                    isBotRunning = true;
+                    updateButtons();
+                    showWelcomePanel();
+                    setTimeout(refreshStatus, 2000);
+                } else {
+                    log(data.message, 'error');
+                }
+            } catch (err) {
+                log('خطأ في الاتصال', 'error');
+            }
+        }
+
+        async function stopBot() {
+            log('جاري الإيقاف...', 'warning');
+            try {
+                const res = await fetch('/api/stop', { method: 'POST' });
+                const data = await res.json();
+                if (data.success) {
+                    log(data.message, 'success');
+                    isBotRunning = false;
+                    updateButtons();
+                    hideWelcomePanel();
+                    refreshStatus();
+                }
+            } catch (err) {
+                log('خطأ في الإيقاف', 'error');
+            }
+        }
+
+        function showWelcomePanel() {
+            document.getElementById('welcomePanel').style.display = 'block';
+            document.getElementById('previewPanel').style.display = 'block';
+        }
+
+        function hideWelcomePanel() {
+            document.getElementById('welcomePanel').style.display = 'none';
+            document.getElementById('previewPanel').style.display = 'none';
+        }
+
+        function toggleWelcome() {
+            const switchEl = document.getElementById('toggleSwitch');
+            const textEl = document.getElementById('toggleText');
+            if (switchEl.classList.contains('active')) {
+                switchEl.classList.remove('active');
+                textEl.textContent = 'معطل';
+            } else {
+                switchEl.classList.add('active');
+                textEl.textContent = 'مفعل';
+            }
+        }
+
+        function updatePreview() {
+            const msg = document.getElementById('welcomeMsg').value || '';
+            document.getElementById('previewText').textContent = msg
+                .replace('{user}', '@User')
+                .replace('{username}', 'User')
+                .replace('{server}', 'السيرفر')
+                .replace('{count}', '100');
+        }
+
+        document.getElementById('welcomeMsg').addEventListener('input', updatePreview);
+
+        function saveConfig() {
+            const config = {
+                channelId: document.getElementById('channelId').value,
+                message: document.getElementById('welcomeMsg').value,
+                enabled: document.getElementById('toggleSwitch').classList.contains('active'),
+                image: document.getElementById('welcomeImage').value
+            };
+            log('تم حفظ الإعدادات', 'success');
+            showStatus('تم الحفظ!', 'success');
+        }
+
+        async function refreshStatus() {
+            try {
+                const [statusRes, cmdRes] = await Promise.all([
+                    fetch('/api/status'),
+                    fetch('/api/commands')
+                ]);
+                const status = await statusRes.json();
+                const commands = await cmdRes.json();
+                updateUI(status, commands);
+            } catch (err) {
+                log('فشل التحديث', 'error');
+            }
+        }
+
+        function updateUI(status, commands) {
+            isBotRunning = status.isRunning;
+            const badge = document.getElementById('statusBadge');
+            const dot = document.getElementById('statusDot');
+            const text = document.getElementById('statusText');
+            
+            if (status.isRunning) {
+                badge.className = 'status-badge online';
+                dot.className = 'dot online';
+                text.textContent = 'شغال';
+            } else {
+                badge.className = 'status-badge offline';
+                dot.className = 'dot offline';
+                text.textContent = 'متوقف';
+            }
+            
+            document.getElementById('ping').textContent = status.ping ? status.ping + 'ms' : '-';
+            document.getElementById('guilds').textContent = status.guilds || '-';
+            document.getElementById('users').textContent = status.users || '-';
+            document.getElementById('commands').textContent = status.commands || '-';
+            
+            const list = document.getElementById('commandsList');
+            if (commands.length > 0) {
+                list.innerHTML = commands.map(cmd => `
+                    <div class="command-card">
+                        <div class="command-header">
+                            <span class="command-name">/${cmd.name}</span>
+                            <span class="command-category">${cmd.category}</span>
+                        </div>
+                        <div class="command-desc">${cmd.description}</div>
+                        <div class="command-usage">${cmd.usage}</div>
+                    </div>
+                `).join('');
+            }
+            
+            updateButtons();
+        }
+
+        function updateButtons() {
+            document.getElementById('startBtn').disabled = isBotRunning;
+            document.getElementById('stopBtn').disabled = !isBotRunning;
+        }
+
+        function log(msg, type = 'info') {
+            const container = document.getElementById('logContainer');
+            const time = new Date().toLocaleTimeString('ar-SA', { hour12: false });
+            container.innerHTML += `
+                <div class="log-entry">
+                    <span class="log-time">${time}</span>
+                    <span class="log-${type}">${msg}</span>
+                </div>
+            `;
+            container.scrollTop = container.scrollHeight;
+        }
+
+        loadToken();
+        refreshStatus();
+        setInterval(refreshStatus, 10000);
+    </script>
+</body>
+</html>
