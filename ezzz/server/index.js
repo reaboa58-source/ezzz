@@ -3,15 +3,12 @@ const path = require('path');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// تحميل البوت
 const client = require('../bot/index');
 
-// Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(express.static(path.join(__dirname, '..', 'public'))); // ← تعديل المسار
+app.use(express.static(path.join(__dirname, '..', 'public')));
 
-// CORS
 app.use((req, res, next) => {
     res.header('Access-Control-Allow-Origin', '*');
     res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
@@ -22,7 +19,6 @@ app.use((req, res, next) => {
     next();
 });
 
-// API Routes
 app.get('/api/status', (req, res) => {
     try {
         res.json(client.getBotStatus());
@@ -61,7 +57,6 @@ app.post('/api/stop', async (req, res) => {
     }
 });
 
-// Music API
 app.post('/api/music/play', (req, res) => {
     res.json({ success: true, message: 'Use !play in Discord' });
 });
@@ -78,12 +73,10 @@ app.get('/api/music/queue', (req, res) => {
     res.json({ queue: [] });
 });
 
-// صفحة رئيسية
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, '..', 'public', 'index.html')); // ← تعديل المسار
+    res.sendFile(path.join(__dirname, '..', 'public', 'index.html'));
 });
 
-// معالجة الأخطاء
 app.use((err, req, res, next) => {
     console.error('Express error:', err);
     res.status(500).json({ success: false, message: 'Server error' });
