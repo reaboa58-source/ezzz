@@ -7,7 +7,7 @@ console.log('🚀 Server starting...');
 
 const client = require('../bot/index');
 
-// Middleware - لازم يكون قبل كل شي
+// Middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -22,13 +22,7 @@ app.use((req, res, next) => {
     next();
 });
 
-// Logs
-app.use((req, res, next) => {
-    console.log(`📡 ${req.method} ${req.path} - ${new Date().toLocaleTimeString()}`);
-    next();
-});
-
-// ========== API Routes - لازم تكون قبل static ==========
+// ========== API Routes - قبل كل شي ==========
 app.get('/api/status', (req, res) => {
     try {
         res.json(client.getBotStatus());
@@ -47,17 +41,14 @@ app.get('/api/commands', (req, res) => {
 
 app.post('/api/start', async (req, res) => {
     console.log('🚀 /api/start called');
-    console.log('📨 Request body:', req.body);
+    console.log('📨 Body:', req.body);
     
     try {
         const { token } = req.body;
-        
         if (!token) {
-            console.log('❌ Token empty');
             return res.status(400).json({ success: false, message: '❌ التوكن فارغ!' });
         }
         
-        console.log('⏳ Starting bot...');
         const result = await client.loginWithToken(token);
         console.log('✅ Result:', result);
         res.json(result);
@@ -68,7 +59,6 @@ app.post('/api/start', async (req, res) => {
 });
 
 app.post('/api/stop', async (req, res) => {
-    console.log('⏹️ /api/stop called');
     try {
         const result = await client.logoutBot();
         res.json(result);
@@ -77,24 +67,7 @@ app.post('/api/stop', async (req, res) => {
     }
 });
 
-// Music API
-app.post('/api/music/play', (req, res) => {
-    res.json({ success: true, message: 'Use !play in Discord' });
-});
-
-app.post('/api/music/stop', (req, res) => {
-    res.json({ success: true, message: 'Use !stop in Discord' });
-});
-
-app.post('/api/music/skip', (req, res) => {
-    res.json({ success: true, message: 'Use !skip in Discord' });
-});
-
-app.get('/api/music/queue', (req, res) => {
-    res.json({ queue: [] });
-});
-
-// ========== Static Files - لازم تكون بعد API ==========
+// ========== Static Files - بعد API ==========
 app.use(express.static(path.join(__dirname, '..', 'public')));
 
 // صفحة رئيسية
@@ -102,12 +75,17 @@ app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, '..', 'public', 'index.html'));
 });
 
-// معالجة الأخطاء
+// 404 handler
+app.use((req, res) => {
+    res.status(404).json({ error: 'Not Found', path: req.path });
+});
+
+// Error handler
 app.use((err, req, res, next) => {
     console.error('Express error:', err);
     res.status(500).json({ success: false, message: 'Server error' });
 });
 
 app.listen(PORT, '0.0.0.0', () => {
-    console.log(`🌐 Dashboard running on port ${PORT}`);
+    console.log(`🌐 Dashboard: http://localhost:${PORT}`);
 });
