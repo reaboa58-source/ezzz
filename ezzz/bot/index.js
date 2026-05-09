@@ -121,4 +121,81 @@ class BotManager {
                                 .addFields(
                                     { name: 'الحالة', value: this.config.welcomeEnabled ? '🟢 مفعل' : '🔴 معطل' },
                                     { name: 'الروم', value: ch ? ch.toString() : '❌ غير محدد' },
-                                    { name: 'الرسالة', value
+                                    { name: 'الرسالة', value: this.config.welcomeMessage }
+                                )
+                                .setColor('#0099ff');
+                            await interaction.reply({ embeds: [embed] });
+                            break;
+                        }
+                    }
+                }
+
+                if (commandName === 'ترحيب-تجربة') {
+                    const fakeMember = interaction.member;
+                    const channel = interaction.guild.channels.cache.get(this.config.welcomeChannelId);
+                    if (!channel) return interaction.reply('❌ لم يتم تحديد روم الترحيب!');
+                    
+                    const welcomeMsg = this.config.welcomeMessage
+                        .replace('{user}', `<@${fakeMember.id}>`)
+                        .replace('{username}', fakeMember.user.username)
+                        .replace('{server}', interaction.guild.name);
+
+                    const embed = new EmbedBuilder()
+                        .setTitle('🎉 عضو جديد!')
+                        .setDescription(welcomeMsg)
+                        .setColor('#00ff88')
+                        .setThumbnail(fakeMember.user.displayAvatarURL({ dynamic: true }))
+                        .setTimestamp();
+
+                    await channel.send({ embeds: [embed] });
+                    await interaction.reply('✅ تم إرسال رسالة تجريبية');
+                }
+            });
+
+            console.log('⏳ Logging in...');
+            await this.client.login(token);
+            this.token = token;
+            console.log('✅ Logged in as:', this.client.user.tag);
+
+            // تسجيل Slash Commands
+            console.log('⏳ Registering slash commands...');
+            const rest = new REST({ version: '10' }).setToken(token);
+            const commands = [
+                {
+                    name: 'ترحيب',
+                    description: 'إعدادات الترحيب',
+                    options: [
+                        { name: 'تفعيل', description: 'تفعيل الترحيب', type: 1 },
+                        { name: 'تعطيل', description: 'تعطيل الترحيب', type: 1 },
+                        { name: 'القناة', description: 'تحديد قناة الترحيب', type: 1, options: [{ name: 'الروم', description: 'اختر الروم', type: 7, required: true }] },
+                        { name: 'الرسالة', description: 'تغيير رسالة الترحيب', type: 1, options: [{ name: 'نص', description: 'النص', type: 3, required: true }] },
+                        { name: 'عرض', description: 'عرض الإعدادات', type: 1 }
+                    ]
+                },
+                { name: 'ترحيب-تجربة', description: 'اختبار رسالة الترحيب' }
+            ];
+
+            await rest.put(Routes.applicationCommands(this.client.user.id), { body: commands });
+            console.log('✅ Slash commands registered');
+
+            return { success: true, message: `✅ البوت شغال: ${this.client.user.tag}` };
+            
+        } catch (error) {
+            console.error('❌ Error in loginWithToken:', error);
+            throw error;
+        }
+    }
+
+    async logoutBot() {
+        console.log('⏹️ logoutBot called');
+        if (!this.client) {
+            return { success: false, message: '❌ البوت موقف!' };
+        }
+        await this.client.destroy();
+        this.client = null;
+        this.token = null;
+        return { success: true, message: '⏹️ البوت متوقف' };
+    }
+}
+
+module.exports = new BotManager();
