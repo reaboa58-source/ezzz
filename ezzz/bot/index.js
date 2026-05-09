@@ -21,7 +21,7 @@ class BotManager {
             ping: this.client.ws.ping,
             guilds: this.client.guilds.cache.size,
             users: this.client.users.cache.size,
-            commands: 2 // ترحيب + ترحيب-تجربة
+            commands: 2
         };
     }
 
@@ -146,7 +146,6 @@ class BotManager {
             }
         });
 
-        // تسجيل الدخول
         await this.client.login(token);
         this.token = token;
 
