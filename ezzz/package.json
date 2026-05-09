@@ -1,10 +1,9 @@
 {
   "name": "discord-welcome-bot",
   "version": "1.0.0",
-  "description": "بوت ترحيب Discord مع لوحة تحكم ويب",
-  "main": "server/index.js",
+  "main": "server.js",
   "scripts": {
-    "start": "node server/index.js"
+    "start": "node server.js"
   },
   "dependencies": {
     "discord.js": "^14.14.1",
