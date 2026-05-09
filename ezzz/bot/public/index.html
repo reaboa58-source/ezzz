@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🤖 بوت الترحيب</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">
+                <div class="logo-icon">🤖</div>
+                <h1>بوت الترحيب</h1>
+            </div>
+            <div class="status-badge offline" id="statusBadge">
+                <span class="dot offline" id="statusDot"></span>
+                <span id="statusText">متوقف</span>
+            </div>
+        </header>
+
+        <section class="panel">
+            <h2 class="panel-title">⚙️ لوحة التحكم</h2>
+            <div class="btn-group">
+                <button id="restartBtn" class="btn btn-primary" onclick="restartBot()">
+                    🔄 إعادة تشغيل
+                </button>
+                <button id="stopBtn" class="btn btn-danger" onclick="stopBot()">
+                    ⏹️ إيقاف
+                </button>
+            </div>
+        </section>
+
+        <section class="panel">
+            <h2 class="panel-title">⚙️ إعدادات الترحيب</h2>
+            <div class="form-group">
+                <label>تفعيل/تعطيل</label>
+                <div class="toggle-switch">
+                    <div class="switch active" id="toggleSwitch" onclick="toggleWelcome()"></div>
+                    <span id="toggleText">مفعل</span>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>ايدي روم الترحيب</label>
+                <input type="text" id="channelId" class="form-control" placeholder="1234567890123456789">
+            </div>
+            <div class="form-group">
+                <label>رسالة الترحيب</label>
+                <textarea id="welcomeMsg" class="form-control">👋 أهلاً وسهلاً {user} بسيرفرنا!</textarea>
+                <div class="variables">
+                    <code>{user}</code> <code>{username}</code> <code>{server}</code> <code>{count}</code>
+                </div>
+            </div>
+            <button class="btn btn-primary w-100" onclick="saveConfig()">💾 حفظ</button>
+        </section>
+
+        <section class="panel">
+            <h2 class="panel-title">📊 إحصائيات</h2>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value" id="ping">-</div>
+                    <div class="stat-label">البنغ</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="guilds">-</div>
+                    <div class="stat-label">السيرفرات</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="users">-</div>
+                    <div class="stat-label">المستخدمين</div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        async function restartBot() {
+            try {
+                const res = await fetch('/api/restart', { method: 'POST' });
+                const data = await res.json();
+                alert(data.message);
+                setTimeout(refreshStatus, 2000);
+            } catch (e) {
+                alert('❌ خطأ');
+            }
+        }
+
+        async function stopBot() {
+            try {
+                const res = await fetch('/api/stop', { method: 'POST' });
+                const data = await res.json();
+                alert(data.message);
+                refreshStatus();
+            } catch (e) {
+                alert('❌ خطأ');
+            }
+        }
+
+        async function refreshStatus() {
+            try {
+                const res = await fetch('/api/status');
+                const status = await res.json();
+                
+                const badge = document.getElementById('statusBadge');
+                const dot = document.getElementById('statusDot');
+                const text = document.getElementById('statusText');
+                
+                if (status.isRunning) {
+                    badge.className = 'status-badge online';
+                    dot.className = 'dot online';
+                    text.textContent = 'شغال';
+                } else {
+                    badge.className = 'status-badge offline';
+                    dot.className = 'dot offline';
+                    text.textContent = 'متوقف';
+                }
+                
+                document.getElementById('ping').textContent = status.ping ? status.ping + 'ms' : '-';
+                document.getElementById('guilds').textContent = status.guilds || '-';
+                document.getElementById('users').textContent = status.users || '-';
+            } catch (e) {}
+        }
+
+        function toggleWelcome() {
+            const el = document.getElementById('toggleSwitch');
+            el.classList.toggle('active');
+            document.getElementById('toggleText').textContent = 
+                el.classList.contains('active') ? 'مفعل' : 'معطل';
+        }
+
+        function saveConfig() {
+            alert('✅ تم الحفظ!');
+        }
+
+        setInterval(refreshStatus, 5000);
+        refreshStatus();
+    </script>
+</body>
+</html>
