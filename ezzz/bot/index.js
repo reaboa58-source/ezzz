@@ -43,10 +43,14 @@ class BotManager {
     }
 
     async loginWithToken(token) {
+        console.log('🔑 loginWithToken called');
+        
         if (this.client) {
+            console.log('🔄 Destroying old client');
             await this.client.destroy();
         }
 
+        console.log('🆕 Creating new client');
         this.client = new Client({
             intents: [
                 GatewayIntentBits.Guilds,
@@ -57,6 +61,7 @@ class BotManager {
 
         // حدث الترحيب
         this.client.on('guildMemberAdd', async (member) => {
+            console.log('👋 New member joined:', member.user.tag);
             if (!this.config.welcomeEnabled || !this.config.welcomeChannelId) return;
             const channel = member.guild.channels.cache.get(this.config.welcomeChannelId);
             if (!channel) return;
@@ -146,32 +151,42 @@ class BotManager {
             }
         });
 
-        await this.client.login(token);
-        this.token = token;
+        try {
+            console.log('⏳ Logging in...');
+            await this.client.login(token);
+            this.token = token;
+            console.log('✅ Logged in as:', this.client.user.tag);
 
-        // تسجيل Slash Commands
-        const rest = new REST({ version: '10' }).setToken(token);
-        const commands = [
-            {
-                name: 'ترحيب',
-                description: 'إعدادات الترحيب',
-                options: [
-                    { name: 'تفعيل', description: 'تفعيل الترحيب', type: 1 },
-                    { name: 'تعطيل', description: 'تعطيل الترحيب', type: 1 },
-                    { name: 'القناة', description: 'تحديد قناة الترحيب', type: 1, options: [{ name: 'الروم', description: 'اختر الروم', type: 7, required: true }] },
-                    { name: 'الرسالة', description: 'تغيير رسالة الترحيب', type: 1, options: [{ name: 'نص', description: 'النص', type: 3, required: true }] },
-                    { name: 'عرض', description: 'عرض الإعدادات', type: 1 }
-                ]
-            },
-            { name: 'ترحيب-تجربة', description: 'اختبار رسالة الترحيب' }
-        ];
+            // تسجيل Slash Commands
+            console.log('⏳ Registering slash commands...');
+            const rest = new REST({ version: '10' }).setToken(token);
+            const commands = [
+                {
+                    name: 'ترحيب',
+                    description: 'إعدادات الترحيب',
+                    options: [
+                        { name: 'تفعيل', description: 'تفعيل الترحيب', type: 1 },
+                        { name: 'تعطيل', description: 'تعطيل الترحيب', type: 1 },
+                        { name: 'القناة', description: 'تحديد قناة الترحيب', type: 1, options: [{ name: 'الروم', description: 'اختر الروم', type: 7, required: true }] },
+                        { name: 'الرسالة', description: 'تغيير رسالة الترحيب', type: 1, options: [{ name: 'نص', description: 'النص', type: 3, required: true }] },
+                        { name: 'عرض', description: 'عرض الإعدادات', type: 1 }
+                    ]
+                },
+                { name: 'ترحيب-تجربة', description: 'اختبار رسالة الترحيب' }
+            ];
 
-        await rest.put(Routes.applicationCommands(this.client.user.id), { body: commands });
+            await rest.put(Routes.applicationCommands(this.client.user.id), { body: commands });
+            console.log('✅ Slash commands registered');
 
-        return { success: true, message: `✅ البوت شغال: ${this.client.user.tag}` };
+            return { success: true, message: `✅ البوت شغال: ${this.client.user.tag}` };
+        } catch (error) {
+            console.error('❌ Login error:', error.message);
+            throw error;
+        }
     }
 
     async logoutBot() {
+        console.log('⏹️ logoutBot called');
         if (!this.client) {
             return { success: false, message: '❌ البوت موقف!' };
         }
