@@ -9,6 +9,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, '..', 'public')));
 
+// CORS
 app.use((req, res, next) => {
     res.header('Access-Control-Allow-Origin', '*');
     res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
@@ -16,6 +17,12 @@ app.use((req, res, next) => {
     if (req.method === 'OPTIONS') {
         return res.sendStatus(200);
     }
+    next();
+});
+
+// Logs لكل طلب
+app.use((req, res, next) => {
+    console.log(`📡 ${req.method} ${req.path} - ${new Date().toLocaleTimeString()}`);
     next();
 });
 
@@ -36,27 +43,39 @@ app.get('/api/commands', (req, res) => {
 });
 
 app.post('/api/start', async (req, res) => {
+    console.log('🚀 /api/start called');
     try {
         const { token } = req.body;
+        console.log('📨 Token received:', token ? 'YES' : 'NO');
+        
         if (!token) {
+            console.log('❌ Token empty');
             return res.status(400).json({ success: false, message: '❌ التوكن فارغ!' });
         }
+        
+        console.log('⏳ Starting bot...');
         const result = await client.loginWithToken(token);
+        console.log('✅ Result:', result);
         res.json(result);
     } catch (error) {
+        console.error('❌ Error:', error.message);
         res.status(500).json({ success: false, message: '❌ خطأ: ' + error.message });
     }
 });
 
 app.post('/api/stop', async (req, res) => {
+    console.log('⏹️ /api/stop called');
     try {
         const result = await client.logoutBot();
+        console.log('✅ Result:', result);
         res.json(result);
     } catch (error) {
+        console.error('❌ Error:', error.message);
         res.status(500).json({ success: false, message: '❌ خطأ: ' + error.message });
     }
 });
 
+// Music API
 app.post('/api/music/play', (req, res) => {
     res.json({ success: true, message: 'Use !play in Discord' });
 });
@@ -73,10 +92,12 @@ app.get('/api/music/queue', (req, res) => {
     res.json({ queue: [] });
 });
 
+// صفحة رئيسية
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, '..', 'public', 'index.html'));
 });
 
+// معالجة الأخطاء
 app.use((err, req, res, next) => {
     console.error('Express error:', err);
     res.status(500).json({ success: false, message: 'Server error' });
