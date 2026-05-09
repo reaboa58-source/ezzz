@@ -5,12 +5,10 @@ const path = require('path');
 const app = express();
 app.use(express.json());
 
-// ====== إدارة التوكن ======
 let botToken = process.env.DISCORD_TOKEN || null;
 let client = null;
 let isBotRunning = false;
 
-// ====== الإعدادات ======
 let config = {
     welcomeChannelId: null,
     welcomeMessage: '👋 أهلاً وسهلاً {user} بسيرفرنا!',
@@ -19,7 +17,6 @@ let config = {
     guildId: null
 };
 
-// ====== دالة تشغيل البوت ======
 function startBot(token) {
     if (client) client.destroy();
 
@@ -121,18 +118,44 @@ function startBot(token) {
         }
     });
 
-    client.on('ready', () => {
-        console.log(`🤖 البوت شغال: ${client.user.tag}`);
-        isBotRunning = true;
-    });
+    return new Promise((resolve, reject) => {
+        client.once('ready', async () => {
+            console.log(`🤖 البوت شغال: ${client.user.tag}`);
+            isBotRunning = true;
+            
+            // سجل Slash Commands
+            try {
+                const rest = new REST({ version: '10' }).setToken(token);
+                const commands = [
+                    {
+                        name: 'ترحيب',
+                        description: 'إعدادات الترحيب',
+                        options: [
+                            { name: 'تفعيل', description: 'تفعيل الترحيب', type: 1 },
+                            { name: 'تعطيل', description: 'تعطيل الترحيب', type: 1 },
+                            { name: 'القناة', description: 'تحديد قناة الترحيب', type: 1, options: [{ name: 'الروم', description: 'اختر الروم', type: 7, required: true }] },
+                            { name: 'الرسالة', description: 'تغيير رسالة الترحيب', type: 1, options: [{ name: 'نص', description: 'النص', type: 3, required: true }] },
+                            { name: 'عرض', description: 'عرض الإعدادات', type: 1 }
+                        ]
+                    },
+                    { name: 'ترحيب-تجربة', description: 'اختبار رسالة الترحيب' }
+                ];
+                
+                await rest.put(Routes.applicationCommands(client.user.id), { body: commands });
+                console.log('✅ Slash Commands مسجلة');
+            } catch (err) {
+                console.error('⚠️ خطأ في تسجيل الأوامر:', err.message);
+            }
+            
+            resolve(client);
+        });
 
-    client.login(token).catch(err => {
-        console.error('❌ خطأ في التوكن:', err.message);
-        isBotRunning = false;
-        throw err;
+        client.login(token).catch(err => {
+            console.error('❌ خطأ في التوكن:', err.message);
+            isBotRunning = false;
+            reject(err);
+        });
     });
-
-    return client;
 }
 
 // ====== API ======
@@ -153,29 +176,11 @@ app.post('/api/set-token', async (req, res) => {
     try {
         botToken = token;
         await startBot(token);
-        
-        const rest = new REST({ version: '10' }).setToken(token);
-        const commands = [
-            {
-                name: 'ترحيب',
-                description: 'إعدادات الترحيب',
-                options: [
-                    { name: 'تفعيل', description: 'تفعيل الترحيب', type: 1 },
-                    { name: 'تعطيل', description: 'تعطيل الترحيب', type: 1 },
-                    { name: 'القناة', description: 'تحديد قناة الترحيب', type: 1, options: [{ name: 'الروم', description: 'اختر الروم', type: 7, required: true }] },
-                    { name: 'الرسالة', description: 'تغيير رسالة الترحيب', type: 1, options: [{ name: 'نص', description: 'النص', type: 3, required: true }] },
-                    { name: 'عرض', description: 'عرض الإعدادات', type: 1 }
-                ]
-            },
-            { name: 'ترحيب-تجربة', description: 'اختبار رسالة الترحيب' }
-        ];
-        
-        await rest.put(Routes.applicationCommands(client.user.id), { body: commands });
         res.json({ success: true, botTag: client.user.tag });
     } catch (error) {
         botToken = null;
         isBotRunning = false;
-        res.status(400).json({ error: '❌ التوكن غير صحيح: ' + error.message });
+        res.status(400).json({ error: '❌ خطأ: ' + error.message });
     }
 });
 
@@ -191,9 +196,11 @@ app.post('/api/config', (req, res) => {
 });
 
 // ====== صفحات الويب ======
-app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
-app.get('/login', (req, res) => res.sendFile(path.join(__dirname, 'public', 'login.html')));
-app.use(express.static('public'));
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+app.use(express.static(path.join(__dirname, 'public')));
 
 // ====== تشغيل ======
 const PORT = process.env.PORT || 3000;
