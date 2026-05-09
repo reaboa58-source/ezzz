@@ -21,100 +21,43 @@
             padding: 40px;
             width: 90%;
             max-width: 450px;
-            backdrop-filter: blur(10px);
         }
-        h1 {
-            color: #00ff88;
-            text-align: center;
-            margin-bottom: 10px;
-            font-size: 28px;
-        }
-        .subtitle {
-            text-align: center;
-            color: #888;
-            margin-bottom: 30px;
-        }
-        .form-group {
-            margin-bottom: 20px;
-        }
-        label {
-            display: block;
-            color: #aaa;
-            margin-bottom: 8px;
-            font-weight: bold;
-        }
+        h1 { color: #00ff88; text-align: center; margin-bottom: 10px; font-size: 28px; }
+        .subtitle { text-align: center; color: #888; margin-bottom: 30px; }
+        .form-group { margin-bottom: 20px; }
+        label { display: block; color: #aaa; margin-bottom: 8px; font-weight: bold; }
         input {
-            width: 100%;
-            padding: 15px;
-            border-radius: 10px;
+            width: 100%; padding: 15px; border-radius: 10px;
             border: 2px solid rgba(255,255,255,0.1);
-            background: rgba(0,0,0,0.3);
-            color: #fff;
-            font-size: 16px;
-            transition: 0.3s;
+            background: rgba(0,0,0,0.3); color: #fff; font-size: 16px;
         }
-        input:focus {
-            outline: none;
-            border-color: #00ff88;
-        }
+        input:focus { outline: none; border-color: #00ff88; }
         .btn {
-            width: 100%;
-            padding: 15px;
+            width: 100%; padding: 15px;
             background: linear-gradient(135deg, #00ff88, #00cc6a);
-            border: none;
-            border-radius: 10px;
-            color: #000;
-            font-size: 18px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: 0.3s;
+            border: none; border-radius: 10px; color: #000;
+            font-size: 18px; font-weight: bold; cursor: pointer;
         }
-        .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 30px rgba(0,255,136,0.3);
-        }
-        .btn:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-        }
+        .btn:hover { transform: translateY(-2px); }
         .info {
             background: rgba(0,255,136,0.1);
             border-right: 3px solid #00ff88;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            color: #ccc;
-            font-size: 14px;
-            line-height: 1.6;
+            padding: 15px; border-radius: 8px;
+            margin-bottom: 20px; color: #ccc; font-size: 14px; line-height: 1.6;
         }
-        .info a {
-            color: #00ff88;
-        }
+        .info a { color: #00ff88; }
         .error {
             background: rgba(255,0,0,0.1);
             border-right: 3px solid #ff4444;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            color: #ff8888;
-            display: none;
+            padding: 15px; border-radius: 8px;
+            margin-bottom: 20px; color: #ff8888; display: none;
         }
-        .loading {
-            display: none;
-            text-align: center;
-            color: #00ff88;
-            margin-top: 15px;
-        }
+        .loading { display: none; text-align: center; color: #00ff88; margin-top: 15px; }
         .spinner {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 2px solid #00ff88;
-            border-top-color: transparent;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin-left: 10px;
-            vertical-align: middle;
+            display: inline-block; width: 20px; height: 20px;
+            border: 2px solid #00ff88; border-top-color: transparent;
+            border-radius: 50%; animation: spin 1s linear infinite;
+            margin-left: 10px; vertical-align: middle;
         }
         @keyframes spin { to { transform: rotate(360deg); } }
     </style>
@@ -138,25 +81,18 @@
             <input type="password" id="tokenInput" placeholder="MTAxxxxxxxxxxxxxxxxxxxxxxxx">
         </div>
 
-        <button class="btn" id="loginBtn" onclick="login()">
-            🚀 تشغيل البوت
-        </button>
+        <button class="btn" id="loginBtn" onclick="login()">🚀 تشغيل البوت</button>
 
         <div class="loading" id="loadingBox">
             <span class="spinner"></span>
-            جاري التحقق من التوكن وتسجيل الأوامر...
+            جاري التحقق من التوكن...
         </div>
     </div>
 
     <script>
-        // لو فيه توكن محفوظ، روح للوحة التحكم
         fetch('/api/check-token')
             .then(r => r.json())
-            .then(data => {
-                if (data.hasToken) {
-                    window.location.href = '/';
-                }
-            });
+            .then(data => { if (data.hasToken) window.location.href = '/'; });
 
         async function login() {
             const token = document.getElementById('tokenInput').value.trim();
@@ -164,10 +100,7 @@
             const loading = document.getElementById('loadingBox');
             const errorBox = document.getElementById('errorBox');
 
-            if (!token) {
-                showError('❌ الرجاء إدخال التوكن');
-                return;
-            }
+            if (!token) { showError('❌ الرجاء إدخال التوكن'); return; }
 
             btn.disabled = true;
             loading.style.display = 'block';
@@ -179,7 +112,6 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ token })
                 });
-
                 const data = await res.json();
 
                 if (res.ok) {
@@ -202,7 +134,6 @@
             errorBox.style.display = 'block';
         }
 
-        // Enter key
         document.getElementById('tokenInput').addEventListener('keypress', (e) => {
             if (e.key === 'Enter') login();
         });
