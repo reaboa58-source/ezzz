@@ -1,375 +1,216 @@
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🤖 بوت الترحيب</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: 'Segoe UI', Tahoma, sans-serif;
-            background: #1a1a2e;
-            color: #fff;
-            min-height: 100vh;
-            padding: 20px;
-        }
-        .container { max-width: 800px; margin: 0 auto; }
-        
-        /* شاشة التوكن */
-        .token-box {
-            background: #242444;
-            border-radius: 15px;
-            padding: 30px;
-            text-align: center;
-            margin-top: 50px;
-        }
-        .token-box h1 { color: #00ff88; margin-bottom: 10px; }
-        .token-box p { color: #888; margin-bottom: 20px; }
-        .token-box input {
-            width: 100%; padding: 15px; border-radius: 10px;
-            border: 2px solid #333;
-            background: #1a1a2e; color: #fff;
-            font-size: 16px; margin-bottom: 15px;
-            text-align: center;
-        }
-        .token-box input:focus { outline: none; border-color: #00ff88; }
-        .start-btn {
-            width: 100%; padding: 15px;
-            background: #00ff88; border: none;
-            border-radius: 10px; color: #000;
-            font-size: 18px; font-weight: bold; cursor: pointer;
-        }
-        .start-btn:hover { background: #00cc6a; }
-        .start-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-        .error { color: #ff4444; margin-top: 15px; display: none; }
-        .loading { color: #00ff88; margin-top: 15px; display: none; }
-        .info {
-            background: rgba(0,255,136,0.1);
-            border-right: 3px solid #00ff88;
-            padding: 15px; border-radius: 8px;
-            margin-top: 20px; color: #ccc; font-size: 14px;
-        }
-        
-        /* لوحة التحكم */
-        .dashboard { display: none; }
-        h1 { text-align: center; margin-bottom: 20px; color: #00ff88; }
-        .card {
-            background: #242444;
-            border-radius: 15px;
-            padding: 25px;
-            margin-bottom: 20px;
-        }
-        .bot-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 20px;
-        }
-        .bot-info { display: flex; align-items: center; gap: 15px; }
-        .bot-avatar {
-            width: 50px; height: 50px; border-radius: 50%;
-            background: #5865f2; display: flex;
-            align-items: center; justify-content: center;
-            font-size: 24px;
-        }
-        .status { display: inline-block; padding: 5px 15px; border-radius: 20px; font-size: 14px; font-weight: bold; }
-        .status.online { background: #00ff8833; color: #00ff88; }
-        .status.offline { background: #ff444433; color: #ff4444; }
-        .stop-btn {
-            background: #ff4444; color: #fff;
-            border: none; padding: 10px 25px;
-            border-radius: 8px; font-size: 16px;
-            font-weight: bold; cursor: pointer;
-        }
-        .stop-btn:hover { background: #cc3333; }
-        
-        .form-group { margin-bottom: 20px; }
-        label { display: block; margin-bottom: 8px; color: #aaa; font-weight: bold; }
-        input, textarea {
-            width: 100%; padding: 12px; border-radius: 8px;
-            border: 1px solid #333;
-            background: #1a1a2e; color: #fff;
-            font-size: 16px; font-family: inherit;
-        }
-        textarea { min-height: 100px; resize: vertical; }
-        .toggle-switch { display: flex; align-items: center; gap: 15px; }
-        .switch {
-            position: relative; width: 60px; height: 30px;
-            background: #444; border-radius: 15px; cursor: pointer; transition: 0.3s;
-        }
-        .switch.active { background: #00ff88; }
-        .switch::after {
-            content: ''; position: absolute; width: 26px; height: 26px;
-            background: #fff; border-radius: 50%; top: 2px; right: 2px; transition: 0.3s;
-        }
-        .switch.active::after { right: 32px; }
-        .btn {
-            background: #00ff88; color: #000;
-            border: none; padding: 15px 40px;
-            border-radius: 10px; font-size: 18px;
-            font-weight: bold; cursor: pointer; width: 100%;
-        }
-        .btn:hover { background: #00cc6a; }
-        .preview-box {
-            background: #36393f; border-radius: 10px;
-            padding: 15px; margin-top: 15px;
-            border-right: 4px solid #00ff88;
-        }
-        .preview-header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
-        .avatar { width: 40px; height: 40px; border-radius: 50%; background: #5865f2; }
-        .preview-content { color: #dcddde; line-height: 1.5; }
-        .variables {
-            background: rgba(0,255,136,0.1); border-radius: 8px;
-            padding: 15px; margin-top: 15px; font-size: 14px;
-        }
-        .variables code {
-            background: #1a1a2e; padding: 2px 8px;
-            border-radius: 4px; color: #00ff88;
-        }
-        .toast {
-            position: fixed; top: 20px; left: 50%;
-            transform: translateX(-50%); background: #00ff88;
-            color: #000; padding: 15px 30px; border-radius: 10px;
-            font-weight: bold; opacity: 0; transition: 0.3s; z-index: 1000;
-        }
-        .toast.show { opacity: 1; }
-    </style>
-</head>
-<body>
-    <div class="container">
-        
-        <!-- شاشة التوكن -->
-        <div class="token-box" id="tokenBox">
-            <h1>🤖 بوت الترحيب</h1>
-            <p>اكتب توكن البوت واضغط تشغيل</p>
-            
-            <input type="password" id="tokenInput" placeholder="توكن البوت هنا...">
-            <button class="start-btn" id="startBtn" onclick="startBot()">▶️ تشغيل البوت</button>
-            
-            <div class="error" id="errorBox"></div>
-            <div class="loading" id="loadingBox">⏳ جاري التشغيل...</div>
-            
-            <div class="info">
-                <strong>📍 من وين أجيب التوكن؟</strong><br>
-                Discord Developer Portal → Bot → Reset Token
-            </div>
-        </div>
+const { Client, GatewayIntentBits, EmbedBuilder, PermissionsBitField, REST, Routes } = require('discord.js');
+const express = require('express');
+const path = require('path');
+const cors = require('cors');
 
-        <!-- لوحة التحكم -->
-        <div class="dashboard" id="dashboard">
-            <h1>⚙️ لوحة تحكم بوت الترحيب</h1>
-            
-            <div class="card">
-                <div class="bot-header">
-                    <div class="bot-info">
-                        <div class="bot-avatar">🤖</div>
-                        <div>
-                            <h3 id="botName">...</h3>
-                            <p>الحالة: <span class="status online" id="botStatus">🟢 شغال</span></p>
-                        </div>
-                    </div>
-                    <button class="stop-btn" onclick="stopBot()">⏹️ إيقاف البوت</button>
-                </div>
-            </div>
+const app = express();
+app.use(cors());
+app.use(express.json());
 
-            <div class="card">
-                <h3>⚙️ إعدادات الترحيب</h3>
+let botToken = null;
+let client = null;
+let isBotRunning = false;
+
+let config = {
+    welcomeChannelId: null,
+    welcomeMessage: '👋 أهلاً وسهلاً {user} بسيرفرنا!',
+    welcomeEnabled: true,
+    welcomeImage: null,
+    guildId: null
+};
+
+function startBot(token) {
+    if (client) client.destroy();
+
+    client = new Client({
+        intents: [
+            GatewayIntentBits.Guilds,
+            GatewayIntentBits.GuildMembers,
+            GatewayIntentBits.GuildMessages
+        ]
+    });
+
+    client.on('guildMemberAdd', async (member) => {
+        if (!config.welcomeEnabled || !config.welcomeChannelId) return;
+        const channel = member.guild.channels.cache.get(config.welcomeChannelId);
+        if (!channel) return;
+
+        const welcomeMsg = config.welcomeMessage
+            .replace('{user}', `<@${member.id}>`)
+            .replace('{username}`, member.user.username)
+            .replace('{server}', member.guild.name)
+            .replace('{count}', member.guild.memberCount);
+
+        const embed = new EmbedBuilder()
+            .setTitle('🎉 عضو جديد!')
+            .setDescription(welcomeMsg)
+            .setColor('#00ff88')
+            .setThumbnail(member.user.displayAvatarURL({ dynamic: true }))
+            .setImage(config.welcomeImage)
+            .setTimestamp()
+            .setFooter({ text: `أنت العضو رقم ${member.guild.memberCount}` });
+
+        await channel.send({ embeds: [embed] });
+    });
+
+    client.on('interactionCreate', async (interaction) => {
+        if (!interaction.isChatInputCommand()) return;
+        if (!interaction.memberPermissions.has(PermissionsBitField.Flags.Administrator)) {
+            return interaction.reply({ content: '❌ للأدمن فقط!', ephemeral: true });
+        }
+
+        const { commandName, options, guild } = interaction;
+
+        if (commandName === 'ترحيب') {
+            const sub = options.getSubcommand();
+            switch (sub) {
+                case 'تفعيل':
+                    config.welcomeEnabled = true;
+                    await interaction.reply('✅ تم تفعيل الترحيب');
+                    break;
+                case 'تعطيل':
+                    config.welcomeEnabled = false;
+                    await interaction.reply('❌ تم تعطيل الترحيب');
+                    break;
+                case 'القناة':
+                    const channel = options.getChannel('الروم');
+                    config.welcomeChannelId = channel.id;
+                    config.guildId = guild.id;
+                    await interaction.reply(`✅ تم تحديد روم الترحيب: ${channel}`);
+                    break;
+                case 'الرسالة':
+                    config.welcomeMessage = options.getString('نص');
+                    await interaction.reply('✅ تم تحديث الرسالة');
+                    break;
+                case 'عرض': {
+                    const ch = guild.channels.cache.get(config.welcomeChannelId);
+                    const embed = new EmbedBuilder()
+                        .setTitle('⚙️ إعدادات الترحيب')
+                        .addFields(
+                            { name: 'الحالة', value: config.welcomeEnabled ? '🟢 مفعل' : '🔴 معطل' },
+                            { name: 'الروم', value: ch ? ch.toString() : '❌ غير محدد' },
+                            { name: 'الرسالة', value: config.welcomeMessage }
+                        )
+                        .setColor('#0099ff');
+                    await interaction.reply({ embeds: [embed] });
+                    break;
+                }
+            }
+        }
+
+        if (commandName === 'ترحيب-تجربة') {
+            const fakeMember = interaction.member;
+            const channel = interaction.guild.channels.cache.get(config.welcomeChannelId);
+            if (!channel) return interaction.reply('❌ لم يتم تحديد روم الترحيب!');
+            
+            const welcomeMsg = config.welcomeMessage
+                .replace('{user}', `<@${fakeMember.id}>`)
+                .replace('{username}', fakeMember.user.username)
+                .replace('{server}', interaction.guild.name);
+
+            const embed = new EmbedBuilder()
+                .setTitle('🎉 عضو جديد!')
+                .setDescription(welcomeMsg)
+                .setColor('#00ff88')
+                .setThumbnail(fakeMember.user.displayAvatarURL({ dynamic: true }))
+                .setTimestamp();
+
+            await channel.send({ embeds: [embed] });
+            await interaction.reply('✅ تم إرسال رسالة تجريبية');
+        }
+    });
+
+    return new Promise((resolve, reject) => {
+        client.once('ready', async () => {
+            console.log(`🤖 البوت شغال: ${client.user.tag}`);
+            isBotRunning = true;
+            
+            try {
+                const rest = new REST({ version: '10' }).setToken(token);
+                const commands = [
+                    {
+                        name: 'ترحيب',
+                        description: 'إعدادات الترحيب',
+                        options: [
+                            { name: 'تفعيل', description: 'تفعيل الترحيب', type: 1 },
+                            { name: 'تعطيل', description: 'تعطيل الترحيب', type: 1 },
+                            { name: 'القناة', description: 'تحديد قناة الترحيب', type: 1, options: [{ name: 'الروم', description: 'اختر الروم', type: 7, required: true }] },
+                            { name: 'الرسالة', description: 'تغيير رسالة الترحيب', type: 1, options: [{ name: 'نص', description: 'النص', type: 3, required: true }] },
+                            { name: 'عرض', description: 'عرض الإعدادات', type: 1 }
+                        ]
+                    },
+                    { name: 'ترحيب-تجربة', description: 'اختبار رسالة الترحيب' }
+                ];
                 
-                <div class="form-group">
-                    <label>تفعيل/تعطيل الترحيب</label>
-                    <div class="toggle-switch">
-                        <div class="switch active" id="toggleSwitch" onclick="toggleWelcome()"></div>
-                        <span id="toggleText">مفعل</span>
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label>ايدي روم الترحيب</label>
-                    <input type="text" id="channelId" placeholder="1234567890123456789">
-                </div>
-
-                <div class="form-group">
-                    <label>رسالة الترحيب</label>
-                    <textarea id="welcomeMsg">👋 أهلاً وسهلاً {user} بسيرفرنا!</textarea>
-                    
-                    <div class="variables">
-                        <strong>المتغيرات المتاحة:</strong><br>
-                        <code>{user}</code> - منشن العضو |
-                        <code>{username}</code> - اسم المستخدم |
-                        <code>{server}</code> - اسم السيرفر |
-                        <code>{count}</code> - عدد الأعضاء
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label>رابط صورة خلفية (اختياري)</label>
-                    <input type="text" id="welcomeImage" placeholder="https://example.com/image.png">
-                </div>
-
-                <button class="btn" onclick="saveConfig()">💾 حفظ الإعدادات</button>
-            </div>
-
-            <div class="card">
-                <h3>👁️ معاينة الرسالة</h3>
-                <div class="preview-box">
-                    <div class="preview-header">
-                        <div class="avatar"></div>
-                        <div>
-                            <div style="color: #fff; font-weight: bold;">بوت الترحيب</div>
-                            <div style="color: #72767d; font-size: 12px;">الآن</div>
-                        </div>
-                    </div>
-                    <div class="preview-content" id="previewText">👋 أهلاً وسهلاً @User بسيرفرنا!</div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="toast" id="toast"></div>
-
-    <script>
-        let currentConfig = {};
-
-        async function startBot() {
-            const token = document.getElementById('tokenInput').value.trim();
-            const btn = document.getElementById('startBtn');
-            const loading = document.getElementById('loadingBox');
-            const errorBox = document.getElementById('errorBox');
-
-            if (!token) {
-                showError('❌ اكتب التوكن اول!');
-                return;
+                await rest.put(Routes.applicationCommands(client.user.id), { body: commands });
+                console.log('✅ Slash Commands مسجلة');
+            } catch (err) {
+                console.error('⚠️ خطأ في تسجيل الأوامر:', err.message);
             }
-
-            btn.disabled = true;
-            loading.style.display = 'block';
-            errorBox.style.display = 'none';
-
-            try {
-                const res = await fetch('/api/start', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ token })
-                });
-
-                const data = await res.json();
-
-                if (res.ok) {
-                    showToast('✅ البوت شغال! ' + data.botTag);
-                    showDashboard(data.botTag);
-                    loadConfig();
-                } else {
-                    showError(data.error || '❌ خطأ');
-                    btn.disabled = false;
-                }
-            } catch (e) {
-                showError('❌ ما قدرت اتصل بالسيرفر');
-                btn.disabled = false;
-            } finally {
-                loading.style.display = 'none';
-            }
-        }
-
-        async function stopBot() {
-            if (!confirm('هل أنت متأكد من إيقاف البوت؟')) return;
             
-            try {
-                const res = await fetch('/api/stop', { method: 'POST' });
-                const data = await res.json();
-                
-                if (res.ok) {
-                    showToast('⏹️ البوت متوقف');
-                    location.reload();
-                } else {
-                    showToast('❌ ' + data.error);
-                }
-            } catch (e) {
-                showToast('❌ خطأ');
-            }
-        }
-
-        function showDashboard(botTag) {
-            document.getElementById('tokenBox').style.display = 'none';
-            document.getElementById('dashboard').style.display = 'block';
-            document.getElementById('botName').textContent = botTag || 'بوت الترحيب';
-        }
-
-        function showError(msg) {
-            const errorBox = document.getElementById('errorBox');
-            errorBox.textContent = msg;
-            errorBox.style.display = 'block';
-        }
-
-        async function loadConfig() {
-            try {
-                const res = await fetch('/api/config');
-                currentConfig = await res.json();
-                document.getElementById('channelId').value = currentConfig.welcomeChannelId || '';
-                document.getElementById('welcomeMsg').value = currentConfig.welcomeMessage || '';
-                document.getElementById('welcomeImage').value = currentConfig.welcomeImage || '';
-                updateToggle(currentConfig.welcomeEnabled);
-                updatePreview();
-            } catch (e) { console.error(e); }
-        }
-
-        function updateToggle(enabled) {
-            const switchEl = document.getElementById('toggleSwitch');
-            const textEl = document.getElementById('toggleText');
-            if (enabled) {
-                switchEl.classList.add('active');
-                textEl.textContent = 'مفعل';
-            } else {
-                switchEl.classList.remove('active');
-                textEl.textContent = 'معطل';
-            }
-        }
-
-        function toggleWelcome() {
-            currentConfig.welcomeEnabled = !currentConfig.welcomeEnabled;
-            updateToggle(currentConfig.welcomeEnabled);
-        }
-
-        function updatePreview() {
-            const msg = document.getElementById('welcomeMsg').value || '';
-            document.getElementById('previewText').textContent = msg
-                .replace('{user}', '@User')
-                .replace('{username}', 'User')
-                .replace('{server}', 'السيرفر')
-                .replace('{count}', '100');
-        }
-
-        document.getElementById('welcomeMsg').addEventListener('input', updatePreview);
-
-        async function saveConfig() {
-            const config = {
-                welcomeChannelId: document.getElementById('channelId').value,
-                welcomeMessage: document.getElementById('welcomeMsg').value,
-                welcomeEnabled: currentConfig.welcomeEnabled,
-                welcomeImage: document.getElementById('welcomeImage').value || null
-            };
-            try {
-                const res = await fetch('/api/config', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(config)
-                });
-                if (res.ok) {
-                    showToast('✅ تم الحفظ!');
-                    currentConfig = { ...currentConfig, ...config };
-                }
-            } catch (e) { showToast('❌ خطأ'); }
-        }
-
-        function showToast(msg) {
-            const toast = document.getElementById('toast');
-            toast.textContent = msg;
-            toast.classList.add('show');
-            setTimeout(() => toast.classList.remove('show'), 3000);
-        }
-
-        document.getElementById('tokenInput').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') startBot();
+            resolve(client);
         });
-    </script>
-</body>
-</html>
+
+        client.login(token).catch(err => {
+            console.error('❌ خطأ في التوكن:', err.message);
+            isBotRunning = false;
+            reject(err);
+        });
+    });
+}
+
+// API
+app.post('/api/start', async (req, res) => {
+    const { token } = req.body;
+    
+    if (!token || token.length < 50) {
+        return res.status(400).json({ error: '❌ التوكن قصير!' });
+    }
+
+    try {
+        botToken = token;
+        await startBot(token);
+        res.json({ success: true, botTag: client.user.tag });
+    } catch (error) {
+        botToken = null;
+        isBotRunning = false;
+        res.status(400).json({ error: '❌ خطأ: ' + error.message });
+    }
+});
+
+app.post('/api/stop', (req, res) => {
+    if (!client) {
+        return res.status(400).json({ error: '❌ البوت موقف!' });
+    }
+    
+    client.destroy();
+    client = null;
+    botToken = null;
+    isBotRunning = false;
+    console.log('⏹️ البوت متوقف');
+    res.json({ success: true, message: 'البوت متوقف' });
+});
+
+app.get('/api/config', (req, res) => res.json(config));
+
+app.post('/api/config', (req, res) => {
+    const { welcomeChannelId, welcomeMessage, welcomeEnabled, welcomeImage } = req.body;
+    if (welcomeChannelId !== undefined) config.welcomeChannelId = welcomeChannelId;
+    if (welcomeMessage !== undefined) config.welcomeMessage = welcomeMessage;
+    if (welcomeEnabled !== undefined) config.welcomeEnabled = welcomeEnabled;
+    if (welcomeImage !== undefined) config.welcomeImage = welcomeImage;
+    res.json({ success: true, config });
+});
+
+// صفحات الويب
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+app.use(express.static(path.join(__dirname, 'public')));
+
+// تشغيل
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+    console.log(`🌐 Dashboard: http://localhost:${PORT}`);
+});
