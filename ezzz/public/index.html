@@ -223,25 +223,37 @@
                 log('اكتب التوكن اول!', 'error');
                 return;
             }
+            
+            const startBtn = document.getElementById('startBtn');
+            startBtn.disabled = true;
             log('جاري التشغيل...', 'warning');
+            
             try {
+                console.log('📤 Sending request to /api/start');
                 const res = await fetch('/api/start', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ token })
                 });
+                
+                console.log('📥 Response status:', res.status);
                 const data = await res.json();
-                if (data.success) {
+                console.log('📥 Response data:', data);
+                
+                if (res.ok && data.success) {
                     log(data.message, 'success');
                     isBotRunning = true;
                     updateButtons();
                     showWelcomePanel();
                     setTimeout(refreshStatus, 2000);
                 } else {
-                    log(data.message, 'error');
+                    log(data.message || '❌ خطأ غير معروف', 'error');
+                    startBtn.disabled = false;
                 }
             } catch (err) {
-                log('خطأ في الاتصال', 'error');
+                console.error('❌ Fetch error:', err);
+                log('❌ خطأ في الاتصال: ' + err.message, 'error');
+                startBtn.disabled = false;
             }
         }
 
@@ -250,15 +262,18 @@
             try {
                 const res = await fetch('/api/stop', { method: 'POST' });
                 const data = await res.json();
-                if (data.success) {
+                
+                if (res.ok && data.success) {
                     log(data.message, 'success');
                     isBotRunning = false;
                     updateButtons();
                     hideWelcomePanel();
                     refreshStatus();
+                } else {
+                    log(data.message || '❌ خطأ', 'error');
                 }
             } catch (err) {
-                log('خطأ في الإيقاف', 'error');
+                log('❌ خطأ في الإيقاف: ' + err.message, 'error');
             }
         }
 
@@ -296,12 +311,6 @@
         document.getElementById('welcomeMsg').addEventListener('input', updatePreview);
 
         function saveConfig() {
-            const config = {
-                channelId: document.getElementById('channelId').value,
-                message: document.getElementById('welcomeMsg').value,
-                enabled: document.getElementById('toggleSwitch').classList.contains('active'),
-                image: document.getElementById('welcomeImage').value
-            };
             log('تم حفظ الإعدادات', 'success');
             showStatus('تم الحفظ!', 'success');
         }
@@ -316,7 +325,7 @@
                 const commands = await cmdRes.json();
                 updateUI(status, commands);
             } catch (err) {
-                log('فشل التحديث', 'error');
+                log('فشل التحديث: ' + err.message, 'error');
             }
         }
 
