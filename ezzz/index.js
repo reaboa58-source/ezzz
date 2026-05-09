@@ -1,11 +1,13 @@
-const { Client, GatewayIntentBits, SlashCommandBuilder, EmbedBuilder, PermissionsBitField, REST, Routes } = require('discord.js');
+const { Client, GatewayIntentBits, EmbedBuilder, PermissionsBitField, REST, Routes } = require('discord.js');
 const express = require('express');
 const path = require('path');
+const cors = require('cors');
 
 const app = express();
+app.use(cors());
 app.use(express.json());
 
-let botToken = process.env.DISCORD_TOKEN || null;
+let botToken = null;
 let client = null;
 let isBotRunning = false;
 
@@ -37,7 +39,7 @@ function startBot(token) {
             .replace('{user}', `<@${member.id}>`)
             .replace('{username}', member.user.username)
             .replace('{server}', member.guild.name)
-            .replace('{count}', member.guild.memberCount);
+            .replace('{count}`, member.guild.memberCount);
 
         const embed = new EmbedBuilder()
             .setTitle('🎉 عضو جديد!')
@@ -123,7 +125,6 @@ function startBot(token) {
             console.log(`🤖 البوت شغال: ${client.user.tag}`);
             isBotRunning = true;
             
-            // سجل Slash Commands
             try {
                 const rest = new REST({ version: '10' }).setToken(token);
                 const commands = [
@@ -158,19 +159,12 @@ function startBot(token) {
     });
 }
 
-// ====== API ======
-app.get('/api/check-token', (req, res) => {
-    res.json({ 
-        hasToken: !!botToken, 
-        isRunning: isBotRunning,
-        botTag: client?.user?.tag || null
-    });
-});
-
-app.post('/api/set-token', async (req, res) => {
+// API
+app.post('/api/start', async (req, res) => {
     const { token } = req.body;
+    
     if (!token || token.length < 50) {
-        return res.status(400).json({ error: '❌ التوكن غير صالح!' });
+        return res.status(400).json({ error: '❌ التوكن قصير!' });
     }
 
     try {
@@ -195,16 +189,15 @@ app.post('/api/config', (req, res) => {
     res.json({ success: true, config });
 });
 
-// ====== صفحات الويب ======
+// صفحات الويب
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 app.use(express.static(path.join(__dirname, 'public')));
 
-// ====== تشغيل ======
+// تشغيل
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`🌐 Dashboard: http://localhost:${PORT}`);
-    if (botToken) startBot(botToken).catch(console.error);
 });
